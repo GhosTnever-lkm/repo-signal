@@ -6,6 +6,8 @@
 
 A free, local-first checkup for the public GitHub signals that help people understand, find, and contribute to a project.
 
+[![Verify RepoSignal](https://github.com/GhosTnever-lkm/repo-signal/actions/workflows/ci.yml/badge.svg)](https://github.com/GhosTnever-lkm/repo-signal/actions/workflows/ci.yml) · [![MIT License](https://img.shields.io/badge/license-MIT-7be3c3.svg)](LICENSE)
+
 [Open the web app](https://ghostnever-lkm.github.io/repo-signal/) · [Report a problem](https://github.com/GhosTnever-lkm/repo-signal/issues/new)
 
 </div>
