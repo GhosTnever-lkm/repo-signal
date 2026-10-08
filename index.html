@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="A clear, local-first readiness check for public GitHub repositories. Find missing project signals and share a practical checklist.">
+  <title>RepoSignal — make your repository easier to trust</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js?v=1"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="RepoSignal home"><span class="brand-mark">↗</span><span>repo<span class="brand-accent">signal</span></span></a>
+    <nav><a href="#how">How it works</a><a href="#privacy">Privacy</a><a href="https://github.com/GhosTnever-lkm/repo-signal" target="_blank" rel="noreferrer">Source ↗</a></nav>
+    <button id="themeButton" class="icon-button" type="button" aria-label="Switch theme">◐</button>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse"></span> REPOSITORY READINESS, MADE CLEAR</p>
+        <h1>Make a good repo<br><em>easy to trust.</em></h1>
+        <p class="lede">A practical checkup for public GitHub projects. See the signals visitors look for, fix gaps, and share a tidy report.</p>
+        <div class="trust-row"><span>◉ Public repos only</span><span>↯ No sign-in</span><span>⌂ Runs in your browser</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="signal-card"><div class="signal-top"><span class="signal-icon">⌁</span><span class="live-label">LIVE CHECK</span></div><div class="signal-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="signal-bottom"><b>Project signals</b><span>README · CI · release</span></div></div>
+        <div class="float-tag tag-a">✓ Clear next steps</div><div class="float-tag tag-b">01 / 08 checks</div>
+      </div>
+    </section>
+
+    <section class="audit-shell" aria-labelledby="auditTitle">
+      <div class="audit-head"><div><p class="eyebrow">THE QUICK AUDIT</p><h2 id="auditTitle">What does your repo tell a new visitor?</h2><p>Paste a public repository link or <code>owner/name</code>.</p></div><span class="counter"><span class="counter-dot"></span> FREE · NO TOKEN</span></div>
+      <form id="auditForm" class="search-form">
+        <label class="sr-only" for="repoInput">GitHub repository</label><span class="github-mark" aria-hidden="true">◉</span>
+        <input id="repoInput" name="repo" autocomplete="url" placeholder="https://github.com/owner/repository" required>
+        <button id="auditButton" type="submit"><span>Run checkup</span><span aria-hidden="true">↗</span></button>
+      </form>
+      <div class="quick-examples"><span>Try a public project:</span><button type="button" data-example="vitejs/vite">vitejs/vite</button><button type="button" data-example="rust-lang/rustlings">rust-lang/rustlings</button></div>
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+      <section id="results" class="results" hidden aria-label="Repository checkup results">
+        <div class="result-summary">
+          <div class="score-ring" id="scoreRing"><span id="scoreValue">—</span><small>/ 100</small></div>
+          <div class="repo-overview"><p class="eyebrow">REPO SIGNAL SCORE</p><h3 id="repoName">Repository</h3><p id="repoDescription"></p><div class="repo-facts" id="repoFacts"></div></div>
+          <a id="repoLink" class="repo-link" target="_blank" rel="noreferrer">Open on GitHub ↗</a>
+        </div>
+        <div class="score-note" id="scoreNote"></div>
+        <div class="result-toolbar"><div><b id="checkCount">0 checks</b><span> · each item links to its fix</span></div><button id="copyReport" type="button" class="secondary-button">Copy report</button></div>
+        <div id="checkList" class="check-list"></div>
+        <p class="score-caveat">This is a transparent checklist, not a security review or a quality rating. A missing signal may be intentional for your project.</p>
+      </section>
+    </section>
+
+    <section id="how" class="how-section">
+      <div class="section-heading"><p class="eyebrow">A USEFUL FIRST IMPRESSION</p><h2>Less guessing. Better next steps.</h2></div>
+      <div class="steps-grid"><article><span class="step-number">01</span><h3>Check public signals</h3><p>We look for project basics like a description, license, release, topics, CI, and contributor guidance.</p></article><article><span class="step-number">02</span><h3>See why each one matters</h3><p>Every result shows what was found, what was missing, and a direct place to make the change.</p></article><article><span class="step-number">03</span><h3>Share the checklist</h3><p>Copy a short, honest report for your README, project board, or next release checklist.</p></article></div>
+    </section>
+    <section id="privacy" class="privacy-strip"><span class="privacy-icon">⌂</span><div><h2>Your source code stays on GitHub.</h2><p>RepoSignal reads public repository metadata through GitHub's public API. It does not clone, upload, or store repository files. Public API rate limits apply.</p></div><span class="privacy-check">LOCAL UI · PUBLIC DATA</span></section>
+  </main>
+  <footer><a class="brand" href="#top"><span class="brand-mark">↗</span><span>repo<span class="brand-accent">signal</span></span></a><span>Open source · MIT · Built for clearer project handoffs</span><a href="https://github.com/GhosTnever-lkm/repo-signal" target="_blank" rel="noreferrer">View source ↗</a></footer>
+</body>
+</html>
