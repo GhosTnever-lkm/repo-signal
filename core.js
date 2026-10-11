@@ -5,7 +5,7 @@ export function parseRepository(value) {
     let url;
     try { url = new URL(text); } catch { throw new Error('Enter a valid GitHub repository link or owner/name.'); }
     if (url.hostname.toLowerCase() !== 'github.com') throw new Error('Use a public repository hosted on github.com.');
-    match = url.pathname.split('/').filter(Boolean);
+    match = url.pathname.split('/').filter(Boolean).slice(0, 2);
   } else match = text.split('/').filter(Boolean);
   if (!match || match.length !== 2 || !/^[A-Za-z0-9-]+$/.test(match[0]) || !/^[A-Za-z0-9._-]+$/.test(match[1])) throw new Error('Enter a repository as owner/name or paste its GitHub URL.');
   return `${match[0]}/${match[1].replace(/\.git$/i, '')}`;

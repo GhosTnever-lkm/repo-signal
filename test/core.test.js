@@ -7,6 +7,11 @@ test('accepts owner/name and common GitHub repository URL forms', () => {
   assert.equal(parseRepository('https://github.com/octocat/Hello-World.git/'), 'octocat/Hello-World');
 });
 
+test('accepts GitHub repository subpages such as issues and tree views', () => {
+  assert.equal(parseRepository('https://github.com/octocat/Hello-World/issues/42'), 'octocat/Hello-World');
+  assert.equal(parseRepository('https://github.com/octocat/Hello-World/tree/main/src'), 'octocat/Hello-World');
+});
+
 test('rejects unrelated hosts and malformed repository names', () => {
   assert.throws(() => parseRepository('https://example.com/octocat/repo'), /github.com/);
   assert.throws(() => parseRepository('octocat'), /owner\/name/);

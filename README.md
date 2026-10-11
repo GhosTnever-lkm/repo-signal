@@ -24,7 +24,7 @@ RepoSignal reads public GitHub metadata and builds a practical checklist for a r
 
 ## Use it
 
-Open [RepoSignal](https://ghostnever-lkm.github.io/repo-signal/) and paste a public GitHub repository URL or `owner/name`. You can also run a local copy by serving this folder over HTTP; opening `index.html` directly may block JavaScript modules in some browsers.
+Open [RepoSignal](https://ghostnever-lkm.github.io/repo-signal/) and paste a public GitHub repository URL (including a link to an issues or file view) or `owner/name`. You can also run a local copy by serving this folder over HTTP; opening `index.html` directly may block JavaScript modules in some browsers.
 
 ## How scoring works
 
