@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildReport, parseRepository, scoreRepository } from '../core.js';
+import { buildReport, extractTreeInventory, parseRepository, scoreRepository } from '../core.js';
 
 test('accepts owner/name and common GitHub repository URL forms', () => {
   assert.equal(parseRepository('octocat/Hello-World'), 'octocat/Hello-World');
@@ -26,10 +26,45 @@ test('calculates a transparent score from weighted visible signals', () => {
   assert.equal(result.checks.find((check) => check.title === 'Security policy').status, 'warn');
 });
 
+test('recognizes contributor and community files in GitHub nested directories', () => {
+  const result = scoreRepository({
+    contentPaths: [
+      '.github/CONTRIBUTING.md',
+      '.github/SECURITY.md',
+      '.github/CODE_OF_CONDUCT.md',
+      '.github/ISSUE_TEMPLATE/bug-report.yml'
+    ]
+  });
+  for (const title of ['Contribution guide', 'Code of conduct', 'Security policy', 'Issue templates']) {
+    assert.equal(result.checks.find((check) => check.title === title).status, 'pass', `${title} should be discovered`);
+  }
+});
+
+test('extracts file paths from a recursive GitHub tree and preserves its completeness flag', () => {
+  const inventory = extractTreeInventory({
+    truncated: true,
+    tree: [
+      { path: '.github/ISSUE_TEMPLATE/bug.yml', type: 'blob' },
+      { path: '.github/ISSUE_TEMPLATE', type: 'tree' },
+      { path: 'README.md', type: 'blob' }
+    ]
+  });
+  assert.deepEqual(inventory.paths, ['.github/ISSUE_TEMPLATE/bug.yml', 'README.md']);
+  assert.deepEqual(inventory.fileNames, ['bug.yml', 'readme.md']);
+  assert.equal(inventory.complete, false);
+  assert.equal(extractTreeInventory({ tree: [] }).complete, true);
+});
+
 test('report lists missing signals and identifies its limits', () => {
   const scored = scoreRepository({});
   const report = buildReport({ metadata: { full_name: 'owner/sample' }, ...scored });
   assert.match(report, /owner\/sample/);
   assert.match(report, /not a security review/);
   assert.match(report, /License/);
+});
+
+test('report warns when GitHub marks the recursive file inventory as partial', () => {
+  const scored = scoreRepository({});
+  const report = buildReport({ metadata: { full_name: 'owner/sample' }, inventoryComplete: false, ...scored });
+  assert.match(report, /partial file list/i);
 });

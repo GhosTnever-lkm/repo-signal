@@ -17,7 +17,8 @@ RepoSignal reads public GitHub metadata and builds a practical checklist for a r
 ## What you get
 
 - A weighted score with each signal explained; no opaque AI judgement.
-- Direct links to places where missing project details can be added.
+- Direct links to places where missing project details can be added, including guidance and issue templates stored under `.github/`.
+- Recursive file discovery, with a clear warning when GitHub marks a repository tree as partial.
 - A copyable Markdown checklist for a project board or release plan.
 - Public repositories only, no account and no access token.
 - A dark or light interface that runs in your browser.

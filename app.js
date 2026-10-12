@@ -1,4 +1,4 @@
-import { scoreRepository, parseRepository, buildReport } from './core.js';
+import { scoreRepository, parseRepository, buildReport, extractTreeInventory } from './core.js';
 
 const $ = (selector) => document.querySelector(selector);
 const form = $('#auditForm');
@@ -28,15 +28,16 @@ async function audit(repo) {
   const encoded = repo.split('/').map(encodeURIComponent);
   const base = `/repos/${encoded[0]}/${encoded[1]}`;
   const responses = await Promise.allSettled([
-    github(base), github(`${base}/readme`), github(`${base}/contents`), github(`${base}/languages`),
+    github(base), github(`${base}/readme`), github(`${base}/languages`),
     github(`${base}/topics`), github(`${base}/releases?per_page=1`), github(`${base}/actions/workflows?per_page=1`)
   ]);
-  const [metadata, readme, files, languages, topics, releases, workflows] = responses.map((item) => item.status === 'fulfilled' ? item.value : null);
+  const [metadata, readme, languages, topics, releases, workflows] = responses.map((item) => item.status === 'fulfilled' ? item.value : null);
   if (!metadata) throw responses[0].reason;
-  const fileNames = Array.isArray(files) ? files.map((file) => file.name.toLowerCase()) : [];
-  const contentPaths = Array.isArray(files) ? files.map((file) => file.path) : [];
+  const tree = metadata.default_branch ? await github(`${base}/git/trees/${encodeURIComponent(metadata.default_branch)}?recursive=1`) : { tree: [], truncated: false };
+  const inventory = extractTreeInventory(tree);
+  const { paths: contentPaths, fileNames } = inventory;
   const score = scoreRepository({ metadata, hasReadme: Boolean(readme), files: fileNames, contentPaths, languages: languages || {}, topics: topics?.names || [], hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0 });
-  return { repo, metadata, files: fileNames, contentPaths, languages: languages || {}, topics: topics?.names || [], hasReadme: Boolean(readme), hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, ...score };
+  return { repo, metadata, files: fileNames, contentPaths, inventoryComplete: inventory.complete, languages: languages || {}, topics: topics?.names || [], hasReadme: Boolean(readme), hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, ...score };
 }
 
 const destinations = {
@@ -79,7 +80,11 @@ form.addEventListener('submit', async (event) => {
   try { repo = parseRepository(input.value); }
   catch (error) { setStatus(error.message, true); results.hidden = true; return; }
   button.disabled = true; button.querySelector('span').textContent = 'Checking…'; setStatus(`Reading public signals for ${repo}…`); results.hidden = true;
-  try { lastAudit = await audit(repo); render(lastAudit); setStatus(`Checkup ready for ${lastAudit.metadata.full_name}.`); results.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  try {
+    lastAudit = await audit(repo); render(lastAudit);
+    setStatus(`Checkup ready for ${lastAudit.metadata.full_name}.${lastAudit.inventoryComplete ? '' : ' GitHub returned a partial file list, so some nested guidance files may not be counted.'}`);
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   catch (error) { setStatus(error.message || 'Could not read this repository. Please try again.', true); }
   finally { button.disabled = false; button.querySelector('span').textContent = 'Run checkup'; }
 });

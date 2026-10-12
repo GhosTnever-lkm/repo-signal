@@ -13,6 +13,17 @@ export function parseRepository(value) {
 
 const fileExists = (files, ...names) => names.some((name) => files.includes(name));
 
+export function extractTreeInventory(tree) {
+  const paths = Array.isArray(tree?.tree)
+    ? tree.tree.filter((item) => item?.type === 'blob' && typeof item.path === 'string').map((item) => item.path)
+    : [];
+  return {
+    paths,
+    fileNames: paths.map((path) => path.split('/').at(-1).toLowerCase()),
+    complete: tree?.truncated !== true
+  };
+}
+
 export function scoreRepository({ metadata = {}, hasReadme = false, files = [], contentPaths = [], languages = {}, topics = [], hasRelease = false, workflowCount = 0 }) {
   const checks = [
     { title: 'Project description', ok: Boolean(metadata.description?.trim()), points: 10, detail: metadata.description?.trim() ? 'A short description explains the project in GitHub search and on the repository page.' : 'Add a one-sentence description so visitors can understand the project before opening it.' },
@@ -31,8 +42,9 @@ export function scoreRepository({ metadata = {}, hasReadme = false, files = [], 
 }
 
 export function buildReport(audit) {
-  const { metadata, score, checks } = audit;
+  const { metadata, score, checks, inventoryComplete = true } = audit;
   const lines = [`# Repository checkup: ${metadata.full_name}`, '', `Readiness signals: ${score}/100`, '', `> This is a transparent checklist, not a security review or a quality rating.`, '', '## Signals'];
+  if (!inventoryComplete) lines.splice(4, 0, '> GitHub returned a partial file list; some nested guidance files may not be counted.', '');
   for (const check of checks) lines.push(`- [${check.status === 'pass' ? 'x' : ' '}] **${check.title}** — ${check.detail}`);
   lines.push('', `Checked with [RepoSignal](https://github.com/GhosTnever-lkm/repo-signal).`);
   return lines.join('\n');
