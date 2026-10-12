@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - 2026-10-12
+
+- Reject malformed repository identifiers with empty owner/repository segments instead of silently normalizing them to a different repository.
+
 ## 1.0.2 - 2026-10-12
 
 - Discover contributor, security, conduct, and issue-template files anywhere in the recursive repository tree, including under `.github/`.

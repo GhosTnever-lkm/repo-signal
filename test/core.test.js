@@ -16,6 +16,8 @@ test('rejects unrelated hosts and malformed repository names', () => {
   assert.throws(() => parseRepository('https://example.com/octocat/repo'), /github.com/);
   assert.throws(() => parseRepository('octocat'), /owner\/name/);
   assert.throws(() => parseRepository('octocat/repo/extra'), /owner\/name/);
+  assert.throws(() => parseRepository('octocat//repo'), /owner\/name/);
+  assert.throws(() => parseRepository('https://github.com//octocat/repo'), /owner\/name/);
 });
 
 test('calculates a transparent score from weighted visible signals', () => {
