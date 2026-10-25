@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6 - 2026-10-25
+
+- Use a root README found in the recursive tree when the separate README API request is unavailable.
+- Require exact community-file names and valid `.github/ISSUE_TEMPLATE` paths to avoid false positives from lookalike filenames.
+- Add regression checks for evidence matching and package/changelog/cache-version consistency.
+
 ## 1.0.5 - 2026-10-25
 
 - Add the score denominator element required by the checkup renderer so successful audits display results without a runtime error.

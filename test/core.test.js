@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildReport, extractTreeInventory, parseRepository, scoreRepository, unavailableSignalsFor } from '../core.js';
+import { buildReport, extractTreeInventory, hasReadmeEvidence, parseRepository, scoreRepository, unavailableSignalsFor } from '../core.js';
 
 test('HTML contains every statically selected element required by the app', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -10,6 +10,14 @@ test('HTML contains every statically selected element required by the app', () =
   const selectors = [...app.matchAll(/\$\('#([^']+)'\)/g)].map((match) => match[1]);
   assert.ok(selectors.length > 0, 'app should contain static ID selectors');
   for (const id of selectors) assert.ok(htmlIds.has(id), `index.html should define #${id}`);
+});
+
+test('package version matches the changelog and app cache-busting URL', () => {
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+  assert.match(html, new RegExp(`app\\.js\\?v=${pkg.version.replaceAll('.', '\\.')}`));
+  assert.match(changelog, new RegExp(`^## ${pkg.version.replaceAll('.', '\\.') } - `, 'm'));
 });
 
 test('accepts owner/name and common GitHub repository URL forms', () => {
@@ -84,6 +92,22 @@ test('identifies failed optional API signals while using the tree as evidence wh
   assert.deepEqual(unavailableSignalsFor(responses, ['README.md', '.github/workflows/ci.yml']), ['Repository topics', 'First release']);
   assert.deepEqual(unavailableSignalsFor(responses, ['README.rst']), ['Repository topics', 'First release', 'GitHub Actions']);
   assert.deepEqual(unavailableSignalsFor(responses, []), ['README', 'Repository topics', 'First release', 'GitHub Actions']);
+});
+
+test('uses a root README from the recursive tree when the README endpoint is unavailable', () => {
+  assert.equal(hasReadmeEvidence(null, ['README.md', 'docs/README.md']), true);
+  assert.equal(hasReadmeEvidence(null, ['docs/README.md']), false);
+  const scored = scoreRepository({ hasReadme: hasReadmeEvidence(null, ['README.md']), contentPaths: ['README.md'] });
+  assert.equal(scored.checks.find((check) => check.title === 'README').status, 'pass');
+});
+
+test('does not treat lookalike filenames as code of conduct or issue templates', () => {
+  const scored = scoreRepository({
+    files: ['mycode_of_conduct.md', 'issue_template-malicious.yml', 'issue_template'],
+    contentPaths: ['docs/mycode_of_conduct.md', '.github/issue_template-malicious.yml', 'docs/issue_template']
+  });
+  assert.equal(scored.checks.find((check) => check.title === 'Code of conduct').status, 'warn');
+  assert.equal(scored.checks.find((check) => check.title === 'Issue templates').status, 'warn');
 });
 
 test('report lists missing signals and identifies its limits', () => {
