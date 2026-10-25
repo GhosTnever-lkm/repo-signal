@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 - 2026-10-25
+
+- Add the score denominator element required by the checkup renderer so successful audits display results without a runtime error.
+- Add a regression test that checks app selectors are present in the page markup.
+
+
 ## 1.0.4 - 2026-10-25
 
 - Mark failed optional GitHub API checks as unavailable instead of reporting them as missing; calculate and label the score using only verified signals.
