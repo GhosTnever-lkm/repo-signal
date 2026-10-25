@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { buildReport, extractTreeInventory, parseRepository, scoreRepository, unavailableSignalsFor } from '../core.js';
+
+test('HTML contains every statically selected element required by the app', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+  const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
+  const selectors = [...app.matchAll(/\$\('#([^']+)'\)/g)].map((match) => match[1]);
+  assert.ok(selectors.length > 0, 'app should contain static ID selectors');
+  for (const id of selectors) assert.ok(htmlIds.has(id), `index.html should define #${id}`);
+});
 
 test('accepts owner/name and common GitHub repository URL forms', () => {
   assert.equal(parseRepository('octocat/Hello-World'), 'octocat/Hello-World');
