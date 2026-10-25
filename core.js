@@ -29,6 +29,10 @@ export function extractTreeInventory(tree) {
   };
 }
 
+export function hasReadmeEvidence(readmeResponse, contentPaths = []) {
+  return Boolean(readmeResponse) || contentPaths.some((path) => /^readme(?:\.|$)/i.test(path));
+}
+
 export function unavailableSignalsFor(responses, contentPaths = []) {
   const paths = contentPaths.map((path) => path.toLowerCase());
   const unavailable = [];
@@ -48,9 +52,9 @@ export function scoreRepository({ metadata = {}, hasReadme = false, files = [], 
     { title: 'GitHub Actions', ok: workflowCount > 0 || contentPaths.some((path) => path.startsWith('.github/workflows/')), points: 14, detail: workflowCount > 0 || contentPaths.some((path) => path.startsWith('.github/workflows/')) ? 'At least one Actions workflow is visible.' : 'Consider a small CI workflow that runs the project checks on each change.' },
     { title: 'First release', ok: hasRelease, points: 10, detail: hasRelease ? 'A GitHub release gives users a versioned starting point.' : 'Publish a tagged release when you have a version worth trying.' },
     { title: 'Contribution guide', ok: fileExists(files, 'contributing.md') || contentPaths.some((path) => path.toLowerCase().endsWith('/contributing.md')), points: 8, detail: fileExists(files, 'contributing.md') || contentPaths.some((path) => path.toLowerCase().endsWith('/contributing.md')) ? 'Contributor guidance is present.' : 'A short CONTRIBUTING guide can explain setup, checks, and how to report changes.' },
-    { title: 'Code of conduct', ok: fileExists(files, 'code_of_conduct.md') || contentPaths.some((path) => path.toLowerCase().endsWith('code_of_conduct.md')), points: 6, detail: fileExists(files, 'code_of_conduct.md') || contentPaths.some((path) => path.toLowerCase().endsWith('code_of_conduct.md')) ? 'A code of conduct is visible.' : 'A code of conduct can set a clear baseline for community interaction.' },
+    { title: 'Code of conduct', ok: fileExists(files, 'code_of_conduct.md') || contentPaths.some((path) => path.toLowerCase().endsWith('/code_of_conduct.md')), points: 6, detail: fileExists(files, 'code_of_conduct.md') || contentPaths.some((path) => path.toLowerCase().endsWith('/code_of_conduct.md')) ? 'A code of conduct is visible.' : 'A code of conduct can set a clear baseline for community interaction.' },
     { title: 'Security policy', ok: fileExists(files, 'security.md') || contentPaths.some((path) => path.toLowerCase().endsWith('/security.md')), points: 6, detail: fileExists(files, 'security.md') || contentPaths.some((path) => path.toLowerCase().endsWith('/security.md')) ? 'Security reporting guidance is present.' : 'Add private vulnerability reporting guidance if the project handles sensitive issues.' },
-    { title: 'Issue templates', ok: contentPaths.some((path) => path.toLowerCase().startsWith('.github/issue_template')) || fileExists(files, 'issue_template'), points: 4, detail: contentPaths.some((path) => path.toLowerCase().startsWith('.github/issue_template')) || fileExists(files, 'issue_template') ? 'Issue templates can make reports more actionable.' : 'Issue templates can prompt for the details maintainers need.' }
+    { title: 'Issue templates', ok: contentPaths.some((path) => /^\.github\/issue_template(?:\.md$|\/)/i.test(path)), points: 4, detail: contentPaths.some((path) => /^\.github\/issue_template(?:\.md$|\/)/i.test(path)) ? 'Issue templates can make reports more actionable.' : 'Issue templates can prompt for the details maintainers need.' }
   ];
   const unavailable = new Set(unavailableSignals);
   const resultChecks = checks.map(({ title, points, ok, detail }) => unavailable.has(title)

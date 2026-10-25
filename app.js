@@ -1,4 +1,4 @@
-import { scoreRepository, parseRepository, buildReport, extractTreeInventory, unavailableSignalsFor } from './core.js';
+import { scoreRepository, parseRepository, buildReport, extractTreeInventory, hasReadmeEvidence, unavailableSignalsFor } from './core.js';
 
 const $ = (selector) => document.querySelector(selector);
 const form = $('#auditForm');
@@ -36,9 +36,10 @@ async function audit(repo) {
   const tree = metadata.default_branch ? await github(`${base}/git/trees/${encodeURIComponent(metadata.default_branch)}?recursive=1`) : { tree: [], truncated: false };
   const inventory = extractTreeInventory(tree);
   const { paths: contentPaths, fileNames } = inventory;
+  const hasReadme = hasReadmeEvidence(readme, contentPaths);
   const unavailableSignals = unavailableSignalsFor(responses, contentPaths);
-  const score = scoreRepository({ metadata, hasReadme: Boolean(readme), files: fileNames, contentPaths, languages: languages || {}, topics: topics?.names || [], hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, unavailableSignals });
-  return { repo, metadata, files: fileNames, contentPaths, inventoryComplete: inventory.complete, languages: languages || {}, topics: topics?.names || [], hasReadme: Boolean(readme), hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, ...score };
+  const score = scoreRepository({ metadata, hasReadme, files: fileNames, contentPaths, languages: languages || {}, topics: topics?.names || [], hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, unavailableSignals });
+  return { repo, metadata, files: fileNames, contentPaths, inventoryComplete: inventory.complete, languages: languages || {}, topics: topics?.names || [], hasReadme, hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, ...score };
 }
 
 const destinations = {
