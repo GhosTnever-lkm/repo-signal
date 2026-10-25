@@ -1,4 +1,4 @@
-import { scoreRepository, parseRepository, buildReport, extractTreeInventory } from './core.js';
+import { scoreRepository, parseRepository, buildReport, extractTreeInventory, unavailableSignalsFor } from './core.js';
 
 const $ = (selector) => document.querySelector(selector);
 const form = $('#auditForm');
@@ -36,7 +36,8 @@ async function audit(repo) {
   const tree = metadata.default_branch ? await github(`${base}/git/trees/${encodeURIComponent(metadata.default_branch)}?recursive=1`) : { tree: [], truncated: false };
   const inventory = extractTreeInventory(tree);
   const { paths: contentPaths, fileNames } = inventory;
-  const score = scoreRepository({ metadata, hasReadme: Boolean(readme), files: fileNames, contentPaths, languages: languages || {}, topics: topics?.names || [], hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0 });
+  const unavailableSignals = unavailableSignalsFor(responses, contentPaths);
+  const score = scoreRepository({ metadata, hasReadme: Boolean(readme), files: fileNames, contentPaths, languages: languages || {}, topics: topics?.names || [], hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, unavailableSignals });
   return { repo, metadata, files: fileNames, contentPaths, inventoryComplete: inventory.complete, languages: languages || {}, topics: topics?.names || [], hasReadme: Boolean(readme), hasRelease: Array.isArray(releases) && releases.length > 0, workflowCount: workflows?.total_count || 0, ...score };
 }
 
@@ -46,10 +47,12 @@ const destinations = {
 };
 
 function render(auditResult) {
-  const { metadata, score, checks } = auditResult;
+  const { metadata, score, checks, availablePoints = 100 } = auditResult;
+  const scorePercent = availablePoints ? score / availablePoints * 100 : 0;
   $('#scoreValue').textContent = score;
-  $('#scoreRing').classList.toggle('warn', score < 80 && score >= 55);
-  $('#scoreRing').classList.toggle('low', score < 55);
+  $('#scoreDenominator').textContent = `/ ${availablePoints}`;
+  $('#scoreRing').classList.toggle('warn', scorePercent < 80 && scorePercent >= 55);
+  $('#scoreRing').classList.toggle('low', availablePoints > 0 && scorePercent < 55);
   $('#repoName').textContent = metadata.full_name;
   $('#repoDescription').textContent = metadata.description || 'No short description is set yet.';
   $('#repoLink').href = metadata.html_url;
@@ -58,8 +61,9 @@ function render(auditResult) {
     auditResult.topics.length + ' topics', metadata.license?.spdx_id || 'No license'
   ].map((fact) => { const chip = document.createElement('span'); chip.className = 'fact-chip'; chip.textContent = fact; return chip; }));
   const passed = checks.filter((check) => check.status === 'pass').length;
-  $('#checkCount').textContent = `${passed} of ${checks.length} signals present`;
-  $('#scoreNote').textContent = score >= 80 ? 'Strong first impression: visitors can quickly understand the project and how to work with it.' : score >= 55 ? 'A few missing signals could make it harder for new users or contributors to get started.' : 'Start with the README, a short description, and a license. Those give visitors the basic context they need.';
+  const unknown = checks.filter((check) => check.status === 'unknown').length;
+  $('#checkCount').textContent = `${passed} of ${checks.length - unknown} verified signals present${unknown ? ` · ${unknown} unavailable` : ''}`;
+  $('#scoreNote').textContent = unknown ? `GitHub did not return ${unknown} signal${unknown === 1 ? '' : 's'}. The score uses ${availablePoints} of 100 possible points; unavailable signals are not counted as missing.` : scorePercent >= 80 ? 'Strong first impression: visitors can quickly understand the project and how to work with it.' : scorePercent >= 55 ? 'A few missing signals could make it harder for new users or contributors to get started.' : 'Start with the README, a short description, and a license. Those give visitors the basic context they need.';
   const list = $('#checkList');
   list.replaceChildren(...checks.map((check) => {
     const card = document.createElement('article'); card.className = `check-card ${check.status}`;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4 - 2026-10-25
+
+- Mark failed optional GitHub API checks as unavailable instead of reporting them as missing; calculate and label the score using only verified signals.
+- Include unavailable checks and the verified score denominator in copied reports.
+
 ## 1.0.3 - 2026-10-12
 
 - Reject malformed repository identifiers with empty owner/repository segments instead of silently normalizing them to a different repository.

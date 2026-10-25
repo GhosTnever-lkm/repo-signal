@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildReport, extractTreeInventory, parseRepository, scoreRepository } from '../core.js';
+import { buildReport, extractTreeInventory, parseRepository, scoreRepository, unavailableSignalsFor } from '../core.js';
 
 test('accepts owner/name and common GitHub repository URL forms', () => {
   assert.equal(parseRepository('octocat/Hello-World'), 'octocat/Hello-World');
@@ -26,6 +26,15 @@ test('calculates a transparent score from weighted visible signals', () => {
   assert.equal(result.checks.length, 10);
   assert.equal(result.checks.find((check) => check.title === 'README').status, 'pass');
   assert.equal(result.checks.find((check) => check.title === 'Security policy').status, 'warn');
+});
+
+test('keeps unavailable GitHub signals out of the score instead of calling them missing', () => {
+  const result = scoreRepository({ metadata: { description: 'An example' }, hasReadme: false, unavailableSignals: ['README', 'Repository topics'] });
+  assert.equal(result.checks.find((check) => check.title === 'README').status, 'unknown');
+  assert.equal(result.checks.find((check) => check.title === 'Repository topics').status, 'unknown');
+  assert.equal(result.checks.find((check) => check.title === 'License').status, 'fail');
+  assert.equal(result.score, 10);
+  assert.equal(result.availablePoints, 72);
 });
 
 test('recognizes contributor and community files in GitHub nested directories', () => {
@@ -57,6 +66,16 @@ test('extracts file paths from a recursive GitHub tree and preserves its complet
   assert.equal(extractTreeInventory({ tree: [] }).complete, true);
 });
 
+test('identifies failed optional API signals while using the tree as evidence where possible', () => {
+  const responses = [
+    { status: 'fulfilled' }, { status: 'rejected' }, { status: 'fulfilled' },
+    { status: 'rejected' }, { status: 'rejected' }, { status: 'rejected' }
+  ];
+  assert.deepEqual(unavailableSignalsFor(responses, ['README.md', '.github/workflows/ci.yml']), ['Repository topics', 'First release']);
+  assert.deepEqual(unavailableSignalsFor(responses, ['README.rst']), ['Repository topics', 'First release', 'GitHub Actions']);
+  assert.deepEqual(unavailableSignalsFor(responses, []), ['README', 'Repository topics', 'First release', 'GitHub Actions']);
+});
+
 test('report lists missing signals and identifies its limits', () => {
   const scored = scoreRepository({});
   const report = buildReport({ metadata: { full_name: 'owner/sample' }, ...scored });
@@ -69,4 +88,12 @@ test('report warns when GitHub marks the recursive file inventory as partial', (
   const scored = scoreRepository({});
   const report = buildReport({ metadata: { full_name: 'owner/sample' }, inventoryComplete: false, ...scored });
   assert.match(report, /partial file list/i);
+});
+
+test('report discloses unavailable signals and the verified score denominator', () => {
+  const scored = scoreRepository({ unavailableSignals: ['README'] });
+  const report = buildReport({ metadata: { full_name: 'owner/sample' }, ...scored });
+  assert.match(report, /Readiness signals: 0\/82 verified points \(82\/100 available\)/);
+  assert.match(report, /\*\*README\*\* \(unknown\)/);
+  assert.match(report, /could not determine whether it is present/i);
 });
