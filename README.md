@@ -16,7 +16,7 @@ RepoSignal reads public GitHub metadata and builds a practical checklist for a r
 
 ## What you get
 
-- A weighted score with each signal explained; no opaque AI judgement.
+- A weighted score with each signal explained; no opaque AI judgement. If GitHub cannot return some optional signals, those checks are marked unavailable and excluded from the displayed denominator rather than called missing.
 - Direct links to places where missing project details can be added, including guidance and issue templates stored under `.github/`.
 - Recursive file discovery, with a clear warning when GitHub marks a repository tree as partial.
 - A copyable Markdown checklist for a project board or release plan.
@@ -29,7 +29,7 @@ Open [RepoSignal](https://ghostnever-lkm.github.io/repo-signal/) and paste a pub
 
 ## How scoring works
 
-The 10 visible checks have fixed weights that add up to 100. A signal earns its points only when the corresponding public metadata or file is visible. The app shows the evidence and missing steps instead of calling the score a measure of code quality.
+The 10 visible checks have fixed weights that add up to 100. A signal earns its points only when the corresponding public metadata or file is visible. When an optional GitHub API request fails, that signal is marked unavailable and excluded from the verified-points denominator; it is never silently treated as missing. The app shows the evidence and missing steps instead of calling the score a measure of code quality.
 
 This is a discoverability and project handoff checklist. It does **not** inspect source code, validate release quality, or perform a security review. Some projects intentionally do not need every item.
 
